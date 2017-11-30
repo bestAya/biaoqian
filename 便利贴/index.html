@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../vue.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            list-style:none;
+        }
+        body,html{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #add{
+            width: 100%;
+            height: 100%;
+        }
+        .left{
+            width: 200px;
+            height: 100%;
+            background:#666686;
+        }
+        .right{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 200px;
+            top: 0;
+        }
+        .list{
+            width: 200px;
+            height: 100px;
+            position: absolute;
+            border-radius: 5px;
+            background: #fff;
+            /*position: relative;*/
+        }
+        .active{
+            z-index: 999;
+        }
+        textarea{
+            width: 100%;
+            flex: 1;
+            outline: none;
+            background: #ffff;
+            border: none;
+            resize: none;
+
+        }
+        h3{
+            font-size: 16px;
+            color:#fff;
+        }
+        .del{
+            position: absolute;
+            top:0;
+            right:0;
+            border-radius:50%;
+            background: #cccccc;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            color: #fff;
+            font-size: 16px;
+        }
+        .type{
+            width: 100%;
+            height: 40px;
+            margin-top: 5px;
+            color: white;
+            font-size: 20px;
+            line-height: 40px;
+            background: mediumslateblue;
+        }
+    </style>
+</head>
+<body>
+    <div id="add">
+        <div class="left">
+            <select class="type" v-model="select" @ >
+                <option disabled value="">请选择</option>
+                <option v-for="v in type">{{v}}</option>
+            </select>
+        </div>
+        <div class="right" @dblclick="add">
+            <box v-for="(v,index) in nots" :mag="v" :key="v.id" v-on:schange="updata" v-on:del="dele" v-on:ind="indx(index)"  ></box>
+        </div>
+    </div>
+    <script>
+//        let arr=[
+//            {id:1,centent:'今天',color:'#ff7800',x:40,y:20,type:'生活'},
+//            {id:2,centent:'吃饭',color:'#CF83FF',x:80,y:40,type:'生活'},
+//            {id:3,centent:'睡觉',color:'#2dffc7',x:100,y:60,type:'生活'},
+//            {id:4,centent:'打豆豆',color:'#fffc16',x:120,y:80,type:'生活'},
+//            {id:5,centent:'噢',color:'#ff28d4',x:140,y:100,type:'生活'},
+//        ];
+//        localStorage.nots=JSON.stringify(arr);
+        Vue.component('box',{
+            props:['mag'],
+            data:function () {
+
+                return {
+                    smag:Object.assign({},this.mag),
+                }
+            },
+            template:`
+            <div class="list" :style="{left:smag.x+'px',top:smag.y+'px',border:'2px solid '+smag.color}"  >
+            <h3 :style="{background:smag.color}" @click="zindx">{{smag.type}}</h3>
+            <textarea v-model="smag.centent"></textarea>
+            <div class="del" @click="dels(smag.id)" >X</div>
+            </div>
+            `,
+            watch:{
+                'smag':{
+                    handler:function () {
+                        this.$emit('schange',this.smag);
+                    },
+                    deep:true
+                }
+            },
+            methods:{
+                dels(v){
+                    this.$emit('del',v)
+                },
+                zindx(){
+                    this.$emit('ind')
+                }
+            }
+
+
+
+
+        })
+        let app=new Vue({
+            el:'#add',
+            data:{
+                nots:[],
+                type:['今天','明天','后天','星期天'],
+                select:'',
+            },
+            computed:{
+                filter(){
+                   return this.nots=this.nots.filter(e=>e.type==this.select);
+                }
+            },
+            methods:{
+              updata(v){
+                  let index=0;
+                  this.nots.forEach((element,i)=>{
+                      if(element.id==v.id){
+                          index=i;
+                      }
+                  })
+                  this.nots.splice(index,1,v);
+              },
+              dele(sid){
+                        this.nots=this.nots.filter(e=>e.id!=sid);
+                    },
+              add(e){
+                  let sid=this.nots.length==0?0:this.nots[this.nots.length-1].id;
+                  let id=sid+1;
+                  let color=`rgb(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)})`;
+                  let x=e.clientX-200;
+                  let y=e.clientY;
+                  console.log(x,y)
+                  let type=this.type[Math.floor(Math.random()*this.type.length)];
+                  this.nots.push({id,centent:'',color,x,y,type})
+              },
+              indx(index){
+                    let list=document.querySelectorAll('.list');
+                    list.forEach(e=>e.classList.remove('active'));
+                  list[index].classList.add('active');
+
+              }
+            },
+            watch:{
+                'nots':{
+                    handler:function () {
+                        localStorage.nots=JSON.stringify(this.nots)
+                    },
+                    deep:true
+                }
+            },
+
+            mounted(){
+                this.nots=JSON.parse(localStorage.nots);
+
+            }
+        })
+    </script>
+</body>
+</html>
