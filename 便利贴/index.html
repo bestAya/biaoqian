@@ -76,18 +76,22 @@
             line-height: 40px;
             background: mediumslateblue;
         }
+        .activer{
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="add">
         <div class="left">
-            <select class="type" v-model="select" @ >
-                <option disabled value="">请选择</option>
+            <select class="type" v-model="select" @change="up(select)">
+                <option value="全部">请选择</option>
                 <option v-for="v in type">{{v}}</option>
             </select>
         </div>
         <div class="right" @dblclick="add">
-            <box v-for="(v,index) in nots" :mag="v" :key="v.id" v-on:schange="updata" v-on:del="dele" v-on:ind="indx(index)"  ></box>
+            <box v-for="(v,index) in nots" :mag="v" :key="v.id"
+                 v-on:schange="updata" v-on:del="dele" v-on:ind="indx(index)" v-on:mousemoves="dup(v.id,index)"></box>
         </div>
     </div>
     <script>
@@ -108,7 +112,7 @@
                 }
             },
             template:`
-            <div class="list" :style="{left:smag.x+'px',top:smag.y+'px',border:'2px solid '+smag.color}"  >
+            <div class="list" :style="{left:smag.x+'px',top:smag.y+'px',border:'2px solid '+smag.color}" @mousedown="ups($event)">
             <h3 :style="{background:smag.color}" @click="zindx">{{smag.type}}</h3>
             <textarea v-model="smag.centent"></textarea>
             <div class="del" @click="dels(smag.id)" >X</div>
@@ -128,6 +132,9 @@
                 },
                 zindx(){
                     this.$emit('ind')
+                },
+                ups(v){
+                    this.$emit('mousemoves',v)
                 }
             }
 
@@ -140,42 +147,78 @@
             data:{
                 nots:[],
                 type:['今天','明天','后天','星期天'],
-                select:'',
+                select:'全部',
             },
             computed:{
                 filter(){
                    return this.nots=this.nots.filter(e=>e.type==this.select);
                 }
             },
-            methods:{
-              updata(v){
-                  let index=0;
-                  this.nots.forEach((element,i)=>{
-                      if(element.id==v.id){
-                          index=i;
-                      }
-                  })
-                  this.nots.splice(index,1,v);
-              },
-              dele(sid){
-                        this.nots=this.nots.filter(e=>e.id!=sid);
-                    },
-              add(e){
-                  let sid=this.nots.length==0?0:this.nots[this.nots.length-1].id;
-                  let id=sid+1;
-                  let color=`rgb(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)})`;
-                  let x=e.clientX-200;
-                  let y=e.clientY;
-                  console.log(x,y)
-                  let type=this.type[Math.floor(Math.random()*this.type.length)];
-                  this.nots.push({id,centent:'',color,x,y,type})
-              },
-              indx(index){
-                    let list=document.querySelectorAll('.list');
-                    list.forEach(e=>e.classList.remove('active'));
-                  list[index].classList.add('active');
+            methods: {
+                updata(v) {
+                    let index = 0;
+                    this.nots.forEach((element, i) => {
+                        if (element.id == v.id) {
+                            index = i;
+                        }
+                    })
+                    this.nots.splice(index, 1, v);
+                },
+                dele(sid) {
+                    this.nots = this.nots.filter(e => e.id != sid);
+                },
+                add(e) {
+                    let sid = this.nots.length == 0 ? 0 : this.nots[this.nots.length - 1].id;
+                    let id = sid + 1;
+                    let color = `rgb(${Math.floor(Math.random() * 256)},${Math.floor(Math.random() * 256)},${Math.floor(Math.random() * 256)})`;
+                    let x = e.clientX - 200;
+                    let y = e.clientY;
+                    console.log(x, y)
+                    let type = this.type[Math.floor(Math.random() * this.type.length)];
+                    this.nots.push({id, centent: '', color, x, y, type})
+                },
+                indx(index) {
+                    let list = document.querySelectorAll('.list');
+                    list.forEach(e => e.classList.remove('active'));
+                    list[index].classList.add('active');
+                },
+                up(v) {
+                    let list = document.querySelectorAll('.list');
+                    let index = 0;
+                    list.forEach((e, i) => {
+                        if (this.nots[i].type == v) {
+                            list[i].classList.remove('activer')
+                        } else {
+                            list[i].classList.add('activer');
+                        }
+                        if (v == '全部') {
+                            list[i].classList.remove('activer')
+                        }
+                    });
+                },
+                dup(event,index) {
+                    let list = document.querySelectorAll('.list');
+                    document.onmousedown = function (e) {
+                        let x = e.clientX-list[index].offsetLeft;
+                        let y = e.clientY-list[index].offsetTop;
+                        document.onmousemove = function (e) {
+                            let Lefts = e.clientX-x;
+                            let Tops = e.clientY-y;
+                            let py;
+                            py=app.nots.filter(e=>e.id==event);
+                            py[0].x=Lefts;
+                            py[0].y=Tops;
+                            app.updata(py[0])
 
-              }
+                            list[index].style.left=`${py[0].x}px`;
+                            list[index].style.top=`${py[0].y}px`;
+                        }
+                        document.onmouseup = function (e) {
+                            document.onmousemove=null;
+                            document.onmouseup=null;
+                        }
+                    }
+                },
             },
             watch:{
                 'nots':{
