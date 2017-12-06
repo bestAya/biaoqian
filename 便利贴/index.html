@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             list-style:none;
+            box-sizing: border-box;
         }
         body,html{
             width: 100%;
@@ -23,6 +24,13 @@
             width: 200px;
             height: 100%;
             background:#666686;
+        }
+        .left>input{
+            width:200px;
+            height:30px;
+            font-size:20px;
+            padding: 5px 10px;
+            outline: none;
         }
         .right{
             width: 100%;
@@ -84,13 +92,14 @@
 <body>
     <div id="add">
         <div class="left">
-            <select class="type" v-model="select" @change="up(select)">
-                <option value="全部">请选择</option>
+            <select class="type" v-model="select">
+                <option :value="type">请选择</option>
                 <option v-for="v in type">{{v}}</option>
             </select>
+            <input type="text" placeholder="请输入要搜索的内容" v-model="seach">
         </div>
         <div class="right" @dblclick="add">
-            <box v-for="(v,index) in nots" :mag="v" :key="v.id"
+            <box v-for="(v,index) in newseach" :mag="v" :key="v.id"
                  v-on:schange="updata" v-on:del="dele" v-on:ind="indx(index)" v-on:mousemoves="dup(v.id,index)"></box>
         </div>
     </div>
@@ -147,12 +156,14 @@
             data:{
                 nots:[],
                 type:['今天','明天','后天','星期天'],
-                select:'全部',
+                select:['今天','明天','后天','星期天'],
+                seach:'',
             },
             computed:{
-                filter(){
-                   return this.nots=this.nots.filter(e=>e.type==this.select);
-                }
+                newseach(){
+                    let newseach=this.nots.filter(e=>e.centent.includes(this.seach)&&this.select.includes(e.type));
+                    return newseach;
+                },
             },
             methods: {
                 updata(v) {
@@ -182,20 +193,7 @@
                     list.forEach(e => e.classList.remove('active'));
                     list[index].classList.add('active');
                 },
-                up(v) {
-                    let list = document.querySelectorAll('.list');
-                    let index = 0;
-                    list.forEach((e, i) => {
-                        if (this.nots[i].type == v) {
-                            list[i].classList.remove('activer')
-                        } else {
-                            list[i].classList.add('activer');
-                        }
-                        if (v == '全部') {
-                            list[i].classList.remove('activer')
-                        }
-                    });
-                },
+
                 dup(event,index) {
                     let list = document.querySelectorAll('.list');
                     document.onmousedown = function (e) {
